@@ -1,0 +1,12 @@
+<form #uploadForm = "ngForm" (ngSubmit) = "onUpload()">
+    <input 
+        type="file"
+        accept="img/png"
+        (change)="onFileSelected($event)"
+        required
+    />
+    <button type="submit" [disabled]="!selectedFile || isUploading" >
+        {{ isUploading ? 'Uploading...' : 'Upload QR' }}
+    </button>
+
+</form>

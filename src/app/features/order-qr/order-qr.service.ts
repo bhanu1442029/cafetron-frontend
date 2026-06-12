@@ -1,7 +1,7 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Observable, of } from "rxjs";
-import { QRResponse } from "./order-qr.models";
+import { QRResponse, QRValidationResponse } from "./order-qr.models";
 
 @Injectable({ providedIn: 'root' })
 export class OrderQRService {
@@ -17,5 +17,15 @@ export class OrderQRService {
         );
     }
 
+    uploadQR(formData: FormData): Observable<QRValidationResponse> {
+        
+        //TODO: Mock data - replace with actual HTTP call once controller endpoint is ready.
+        return of(
+            {
+                isValid: true,
+                token: '60407a78-2fc0-4f10-9161-7234ebd415c2'
+            }
+        )
+    }
 
 }
