@@ -111,7 +111,8 @@
         <h2 class="section-title">📲 Pickup QR Code</h2>
         <div class="qr-content">
           <p class="qr-description">Show this QR code at pickup</p>
-          <div class="qr-token">{{ order.qrToken }}</div>
+          <!-- <div class="qr-token">{{ order.qrToken }}</div> -->
+           <div class="qr-token"><order-qr-display [orderId]="order.orderId" /></div>
         </div>
       </div>
 

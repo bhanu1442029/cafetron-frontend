@@ -6,11 +6,12 @@ import { takeUntil } from 'rxjs/operators';
 
 import { OrderApiService } from '../../services/order-api.service';
 import { OrderDetailResponse } from '../../models/order.models';
+import { OrderQRDisplayComponent } from 'src/app/features/order-qr/order-qr-display/order-qr-display.component';
 
 @Component({
   selector: 'order-detail',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, OrderQRDisplayComponent],
   templateUrl: './order-detail.component.html',
   styleUrl: './order-detail.component.css',
 })
