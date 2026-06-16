@@ -36,7 +36,7 @@ export class OrderQRUploadComponent {
         }
 
         const formData = new FormData();
-        formData.append("file", this.selectedFile, this.selectedFile.name);
+        formData.append("qr", this.selectedFile, this.selectedFile.name);
 
         this.isUploading = true;
 
@@ -46,7 +46,7 @@ export class OrderQRUploadComponent {
                 this.uploadCompleted.emit(response);
             },
             error: (err) => {
-                console.error(`Upload failed: ${err}`);
+                console.error(`Upload failed: ${err.message || err}`);
             },
             complete: () => {
                 this.isUploading = false;
