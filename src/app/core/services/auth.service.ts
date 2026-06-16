@@ -47,9 +47,14 @@ export class AuthService {
   // ── Session management ───────────────────────────────────────────
 
   private saveSession(response: AuthResponse): void {
+    const normalizedResponse: AuthResponse = {
+      ...response,
+      role: this.normalizeRole(response.role) || response.role,
+    };
+
     localStorage.setItem(this.TOKEN_KEY, response.token);
     this.LEGACY_TOKEN_KEYS.forEach((key) => localStorage.removeItem(key));
-    localStorage.setItem(this.USER_KEY, JSON.stringify(response));
+    localStorage.setItem(this.USER_KEY, JSON.stringify(normalizedResponse));
   }
 
   logout(): void {
@@ -95,7 +100,12 @@ export class AuthService {
   }
 
   getRole(): string | null {
-    return this.getStoredUser()?.role ?? null;
+    const role = this.getStoredUser()?.role || this.getRoleFromToken();
+    if (!role) {
+      return null;
+    }
+
+    return this.normalizeRole(role);
   }
 
   getUserName(): string | null {
@@ -115,12 +125,43 @@ export class AuthService {
     switch (this.getRole()) {
       case APP_ROLES.admin:
         return '/admin';
-      case APP_ROLES.counter:
-        return '/counter';
       case APP_ROLES.vendor:
-        return '/menu/manage';
+        return '/vendor/orders';
       default:
         return '/menu';
+    }
+  }
+
+  private normalizeRole(role: string | null | undefined): string | null {
+    if (!role) {
+      return null;
+    }
+
+    const normalizedRole = String(role).replace(/^ROLE_/i, '').trim().toUpperCase();
+    return normalizedRole === APP_ROLES.counter ? APP_ROLES.vendor : normalizedRole;
+  }
+
+  private getRoleFromToken(): string | null {
+    const token = this.getToken();
+    if (!token) {
+      return null;
+    }
+
+    const [, payload] = token.split('.');
+    if (!payload) {
+      return null;
+    }
+
+    try {
+      const normalizedPayload = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const paddedPayload = normalizedPayload.padEnd(
+        normalizedPayload.length + ((4 - (normalizedPayload.length % 4)) % 4),
+        '='
+      );
+      const decoded = JSON.parse(atob(paddedPayload));
+      return this.normalizeRole(decoded?.role);
+    } catch {
+      return null;
     }
   }
 }

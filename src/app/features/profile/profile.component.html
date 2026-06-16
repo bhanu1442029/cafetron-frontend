@@ -47,7 +47,7 @@
         <div class="detail-tile">
           <span class="material-symbols-outlined">verified_user</span>
           <p>Role</p>
-          <strong>{{ user.role }}</strong>
+          <strong>{{ getDisplayRole(user.role) }}</strong>
         </div>
         <div class="detail-tile">
           <span class="material-symbols-outlined">tag</span>
@@ -57,21 +57,37 @@
       </section>
 
       <nav class="profile-actions">
-        <a routerLink="/menu">
+        <a *ngIf="!isVendorProfile()" routerLink="/menu">
           <span class="material-symbols-outlined">restaurant_menu</span>
           Menu
         </a>
-        <a routerLink="/cart">
+        <a *ngIf="!isVendorProfile()" routerLink="/cart">
           <span class="material-symbols-outlined">shopping_cart</span>
           Cart
         </a>
-        <a routerLink="/orders">
+        <a *ngIf="!isVendorProfile()" routerLink="/orders">
           <span class="material-symbols-outlined">receipt_long</span>
           Orders
         </a>
-        <a routerLink="/wallet">
+        <a *ngIf="!isVendorProfile()" routerLink="/wallet">
           <span class="material-symbols-outlined">account_balance_wallet</span>
           Wallet
+        </a>
+        <a *ngIf="isVendorProfile()" routerLink="/vendor/orders">
+          <span class="material-symbols-outlined">room_service</span>
+          Orders
+        </a>
+        <a *ngIf="isVendorProfile()" routerLink="/menu/manage">
+          <span class="material-symbols-outlined">edit_note</span>
+          Manage
+        </a>
+        <a *ngIf="isVendorProfile()" routerLink="/vendor/scanner">
+          <span class="material-symbols-outlined">qr_code_scanner</span>
+          Scanner
+        </a>
+        <a *ngIf="isVendorProfile()" routerLink="/vendor/queue">
+          <span class="material-symbols-outlined">groups</span>
+          Queue
         </a>
       </nav>
     </article>

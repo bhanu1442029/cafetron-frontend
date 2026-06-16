@@ -23,6 +23,14 @@
   text-decoration: none;
 }
 
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .vendor-orders-shell {
   display: grid;
   gap: 18px;
@@ -264,6 +272,11 @@
 }
 
 @media (max-width: 520px) {
+  .topbar-actions {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
   .orders-grid,
   .order-actions,
   .order-meta {

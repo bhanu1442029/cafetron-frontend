@@ -11,7 +11,7 @@ import { OrderQRDisplayComponent } from 'src/app/features/order-qr/order-qr-disp
 @Component({
   selector: 'order-detail',
   standalone: true,
-  imports: [CommonModule, OrderQRDisplayComponent],
+  imports: [CommonModule, OrderQRDisplayComponent, RouterModule],
   templateUrl: './order-detail.component.html',
   styleUrl: './order-detail.component.css',
 })

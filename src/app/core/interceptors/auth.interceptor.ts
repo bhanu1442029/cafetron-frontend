@@ -25,9 +25,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           router.navigate(['/login']);
         }
 
-        if (error.status === 403) {
-          router.navigate([authService.getDefaultRoute()]);
-        }
+        // Let feature pages handle 403s locally. Redirecting here can make a
+        // routed component appear to never load, especially on vendor pages.
       }
 
       return throwError(() => error);

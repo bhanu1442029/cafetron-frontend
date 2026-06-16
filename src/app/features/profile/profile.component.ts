@@ -3,7 +3,7 @@ import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
-import { UserProfile } from '../../models/auth.models';
+import { APP_ROLES, UserProfile } from '../../models/auth.models';
 import { CartService } from '../cart-order/services/cart.service';
 
 @Component({
@@ -62,6 +62,15 @@ export class ProfileComponent implements OnInit, OnDestroy {
       .slice(0, 2)
       .map((part) => part.charAt(0).toUpperCase())
       .join('');
+  }
+
+  getDisplayRole(role: string): string {
+    const normalizedRole = String(role).replace(/^ROLE_/i, '').trim().toUpperCase();
+    return normalizedRole === APP_ROLES.counter ? APP_ROLES.vendor : normalizedRole;
+  }
+
+  isVendorProfile(): boolean {
+    return this.getDisplayRole(this.profile?.role || '') === APP_ROLES.vendor;
   }
 
   ngOnDestroy(): void {

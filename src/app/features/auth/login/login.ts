@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
-import { APP_ROLES, LoginRequest } from '../../../models/auth.models';
+import { LoginRequest } from '../../../models/auth.models';
 
 @Component({
   selector: 'app-login',
@@ -37,7 +37,7 @@ export class LoginComponent {
       next: (response) => {
         this.isLoading = false;
         this.cdr.detectChanges();
-        this.redirectByRole(response.role);
+        this.router.navigate([this.authService.getDefaultRoute()]);
       },
       error: (err) => {
         this.isLoading = false;
@@ -47,19 +47,4 @@ export class LoginComponent {
     });
   }
 
-  private redirectByRole(role: string): void {
-    switch (role) {
-      case APP_ROLES.admin:
-        this.router.navigate(['/admin']);
-        break;
-      case APP_ROLES.counter:
-        this.router.navigate(['/counter']);
-        break;
-      case APP_ROLES.vendor:
-        this.router.navigate(['/menu/manage']);
-        break;
-      default:
-        this.router.navigate(['/menu']);
-    }
-  }
 }

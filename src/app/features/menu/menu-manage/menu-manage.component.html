@@ -9,6 +9,10 @@
         </p>
       </div>
       <div class="header-actions">
+        <a *ngIf="isVendorUser()" class="btn btn-secondary" routerLink="/vendor/orders">
+          <span class="material-symbols-outlined">receipt_long</span>
+          Orders
+        </a>
         <a *ngIf="isAdminUser()" class="btn btn-secondary" routerLink="/admin/vendors">
           <span class="material-symbols-outlined">storefront</span>
           Vendors

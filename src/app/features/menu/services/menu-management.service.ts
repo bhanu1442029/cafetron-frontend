@@ -2,10 +2,11 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { MenuItemResponse, MenuItemRequest } from '../models/menu-management.models';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class MenuManagementService {
-  private readonly API_URL = 'http://localhost:8081/api/menu';
+  private readonly API_URL = `${environment.apiUrl}/menu`;
 
   constructor(private http: HttpClient) {}
 

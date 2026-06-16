@@ -108,10 +108,10 @@ const featureRoute = ({
   },
 });
 
-const MENU_ROLES = [APP_ROLES.admin, APP_ROLES.counter, APP_ROLES.employee, APP_ROLES.vendor];
+const MENU_ROLES = [APP_ROLES.admin, APP_ROLES.employee, APP_ROLES.vendor];
 const EMPLOYEE_ORDER_ROLES = [APP_ROLES.admin, APP_ROLES.employee];
 const MENU_MANAGE_ROLES = [APP_ROLES.admin, APP_ROLES.vendor];
-const COUNTER_ROLES = [APP_ROLES.admin, APP_ROLES.counter];
+const VENDOR_STAFF_ROLES = [APP_ROLES.admin, APP_ROLES.vendor];
 const ADMIN_ROLES = [APP_ROLES.admin];
 const VENDOR_ROLES = [APP_ROLES.admin, APP_ROLES.vendor];
 
@@ -202,21 +202,21 @@ export const routes: Routes = [
     path: 'pickup',
     title: 'Scan Pickup QR',
     canActivate: [authGuard, roleGuard],
-    data: { roles: COUNTER_ROLES },
+    data: { roles: VENDOR_STAFF_ROLES },
     component: OrderQrScannerComponent,
   },
   {
     path: 'pickup/scan',
     title: 'Scan Pickup QR',
     canActivate: [authGuard, roleGuard],
-    data: { roles: COUNTER_ROLES },
+    data: { roles: VENDOR_STAFF_ROLES },
     component: OrderQrScannerComponent,
   },
   {
     path: 'pickup/upload',
     title: 'Upload Pickup QR',
     canActivate: [authGuard, roleGuard],
-    data: { roles: COUNTER_ROLES },
+    data: { roles: VENDOR_STAFF_ROLES },
     component: OrderQRUploadComponent,
   },
   {
@@ -228,25 +228,29 @@ export const routes: Routes = [
   },
   {
     path: 'counter',
-    title: 'Counter Scanner',
+    redirectTo: 'vendor/scanner',
+    pathMatch: 'full',
+  },
+  {
+    path: 'counter/scanner',
+    redirectTo: 'vendor/scanner',
+  },
+  {
+    path: 'counter/queue',
+    redirectTo: 'vendor/queue',
+  },
+  {
+    path: 'vendor/scanner',
+    title: 'Vendor Scanner',
     canActivate: [authGuard, roleGuard],
-    component: PendingFeatureRouteComponent,
-    data: {
-      componentPath: 'features/pickup-scanner/scanner/scanner.component',
-      roles: COUNTER_ROLES,
-    },
+    data: { roles: VENDOR_STAFF_ROLES },
+    component: OrderQrScannerComponent,
   },
   featureRoute({
-    path: 'counter/scanner',
-    title: 'Counter Scanner',
-    componentPath: 'features/pickup-scanner/scanner/scanner.component',
-    roles: COUNTER_ROLES,
-  }),
-  featureRoute({
-    path: 'counter/queue',
-    title: 'Pickup Queue',
+    path: 'vendor/queue',
+    title: 'Vendor Queue',
     componentPath: 'features/pickup-scanner/queue/queue.component',
-    roles: COUNTER_ROLES,
+    roles: VENDOR_STAFF_ROLES,
   }),
   {
     path: 'admin',

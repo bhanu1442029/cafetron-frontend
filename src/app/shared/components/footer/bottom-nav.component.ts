@@ -165,17 +165,12 @@ export class BottomNavComponent implements OnInit, OnDestroy {
           { label: 'Menu', icon: 'restaurant_menu', link: '/menu/manage' },
           { label: 'Profile', icon: 'account_circle', link: '/profile' },
         ];
-      case APP_ROLES.counter:
-        return [
-          { label: 'Menu', icon: 'restaurant_menu', link: '/menu' },
-          { label: 'Scanner', icon: 'qr_code_scanner', link: '/counter/scanner' },
-          { label: 'Queue', icon: 'groups', link: '/counter/queue' },
-          { label: 'Profile', icon: 'account_circle', link: '/profile' },
-        ];
       case APP_ROLES.vendor:
         return [
-          { label: 'Menu', icon: 'restaurant_menu', link: '/menu' },
+          { label: 'Orders', icon: 'room_service', link: '/vendor/orders' },
           { label: 'Manage', icon: 'edit_note', link: '/menu/manage' },
+          { label: 'Scanner', icon: 'qr_code_scanner', link: '/vendor/scanner' },
+          { label: 'Queue', icon: 'groups', link: '/vendor/queue' },
           { label: 'Profile', icon: 'account_circle', link: '/profile' },
         ];
       default:

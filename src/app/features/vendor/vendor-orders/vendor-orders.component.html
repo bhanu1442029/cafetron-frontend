@@ -6,17 +6,23 @@
       </a>
       <h1>Vendor Orders</h1>
     </div>
-    <a class="profile-link" routerLink="/profile">
-      <span class="material-symbols-outlined">account_circle</span>
-      Profile
-    </a>
+    <div class="topbar-actions">
+      <a class="profile-link" routerLink="/menu/manage">
+        <span class="material-symbols-outlined">restaurant_menu</span>
+        Manage Menu
+      </a>
+      <a class="profile-link" routerLink="/profile">
+        <span class="material-symbols-outlined">account_circle</span>
+        Profile
+      </a>
+    </div>
   </header>
 
   <section class="vendor-orders-shell">
     <div class="page-title">
       <p class="eyebrow">Vendor queue</p>
       <h2>Accept or decline incoming orders</h2>
-      <p>Only orders for your vendor account are shown here.</p>
+      <p>Only orders for your vendor account are shown here. Use Manage Menu to add or update items.</p>
     </div>
 
     <div *ngIf="toast && !errorMessage" class="notice success">
