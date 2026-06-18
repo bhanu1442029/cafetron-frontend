@@ -16,7 +16,7 @@
           <span class="material-symbols-outlined">account_circle</span>
           {{ userName }}
         </a>
-        <a class="manage-link" routerLink="/menu/manage">
+        <a *ngIf="isVendorUser()" class="manage-link" routerLink="/menu/manage">
           <span class="material-symbols-outlined">tune</span>
           Manage
         </a>

@@ -7,6 +7,7 @@ import { Subject } from 'rxjs';
 import { takeUntil, timeout } from 'rxjs/operators';
 import { CartItem, CartService } from '../../cart-order/services/cart.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { APP_ROLES } from 'src/app/models/auth.models';
 
 @Component({
   selector: 'app-menu-browse',
@@ -53,6 +54,10 @@ export class MenuBrowseComponent implements OnInit, OnDestroy {
 
     this.loadToday();
   }
+
+    isVendorUser(): boolean {
+      return this.authService.hasRole(APP_ROLES.vendor);
+    }
   
   addToCart(item: MenuItem): void {
     if (!item.isAvailable) {
