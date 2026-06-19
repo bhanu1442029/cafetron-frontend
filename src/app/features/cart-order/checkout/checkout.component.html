@@ -89,17 +89,29 @@
           </div>
           <p class="card-copy">Choose when your food should be fresh and ready for pickup.</p>
 
-          <div class="timezone-control">
-            <label for="checkout-card-timezone-select">Timezone</label>
-            <select
-              id="checkout-card-timezone-select"
-              [(ngModel)]="selectedTimeZone"
-              (ngModelChange)="onTimeZoneChange($event)"
-            >
-              <option *ngFor="let timeZone of timeZoneOptions" [value]="timeZone">
-                {{ getTimeZoneLabel(timeZone) }}
-              </option>
-            </select>
+          <div class="pickup-context-grid">
+            <div class="timezone-control">
+              <label for="checkout-card-location-input">Location</label>
+              <input
+                id="checkout-card-location-input"
+                type="text"
+                [(ngModel)]="pickupLocation"
+                (ngModelChange)="onLocationChange($event)"
+                placeholder="Pickup location"
+              />
+            </div>
+            <div class="timezone-control">
+              <label for="checkout-card-timezone-select">Timezone</label>
+              <select
+                id="checkout-card-timezone-select"
+                [(ngModel)]="selectedTimeZone"
+                (ngModelChange)="onTimeZoneChange($event)"
+              >
+                <option *ngFor="let timeZone of timeZoneOptions" [value]="timeZone.id">
+                  {{ getTimeZoneLabel(timeZone.id) }}
+                </option>
+              </select>
+            </div>
           </div>
 
           <div class="slot-grid">
@@ -245,17 +257,29 @@
             <h3>Select time slot</h3>
           </div>
         </div>
-        <div class="timezone-control compact">
-          <label for="checkout-overview-timezone-select">Timezone</label>
-          <select
-            id="checkout-overview-timezone-select"
-            [(ngModel)]="selectedTimeZone"
-            (ngModelChange)="onTimeZoneChange($event)"
-          >
-            <option *ngFor="let timeZone of timeZoneOptions" [value]="timeZone">
-              {{ getTimeZoneLabel(timeZone) }}
-            </option>
-          </select>
+        <div class="pickup-context-grid compact">
+          <div class="timezone-control">
+            <label for="checkout-overview-location-input">Location</label>
+            <input
+              id="checkout-overview-location-input"
+              type="text"
+              [(ngModel)]="pickupLocation"
+              (ngModelChange)="onLocationChange($event)"
+              placeholder="Pickup location"
+            />
+          </div>
+          <div class="timezone-control">
+            <label for="checkout-overview-timezone-select">Timezone</label>
+            <select
+              id="checkout-overview-timezone-select"
+              [(ngModel)]="selectedTimeZone"
+              (ngModelChange)="onTimeZoneChange($event)"
+            >
+              <option *ngFor="let timeZone of timeZoneOptions" [value]="timeZone.id">
+                {{ getTimeZoneLabel(timeZone.id) }}
+              </option>
+            </select>
+          </div>
         </div>
         <div class="slot-grid compact">
           <button

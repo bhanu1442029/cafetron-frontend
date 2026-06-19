@@ -5,6 +5,8 @@ export interface PlaceOrderItemRequest {
 
 export interface PlaceOrderRequest {
   pickupSlot: string;
+  location: string;
+  pickupTimeZone: string;
   items: PlaceOrderItemRequest[];
 }
 
@@ -23,6 +25,7 @@ export interface MyOrderSummaryResponse {
   totalAmount: number;
   pickupSlot: string;
   location: string;
+  pickupTimeZone: string;
   createdAt: string | Date;
 }
 
@@ -41,6 +44,7 @@ export interface OrderDetailResponse {
   totalAmount: number;
   pickupSlot: string;
   location: string;
+  pickupTimeZone: string;
   qrToken: string;
   createdAt: string | Date;
   items: OrderDetailItemResponse[];

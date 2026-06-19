@@ -9,6 +9,7 @@ import { OrderApiService } from '../services/order-api.service';
 import { PlaceOrderRequest } from '../models/order.models';
 import { CartItem, CartService } from '../services/cart.service';
 import { WalletService } from '../../wallet/wallet.service';
+import { TimeZoneOption, TimeZoneService } from '../services/timezone.service';
 
 @Component({
   selector: 'checkout',
@@ -21,7 +22,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   cartItems: CartItem[] = [];
   selectedPickupSlot: string = '';
   selectedTimeZone = 'Asia/Kolkata';
-  timeZoneOptions: string[] = [];
+  pickupLocation = 'Cafetron cafeteria counter';
+  timeZoneOptions: TimeZoneOption[] = [];
   totalAmount: number = 0;
   walletBalance: number | null = null;
   isLoading: boolean = false;
@@ -35,6 +37,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private readonly cafeteriaTimeZone = 'Asia/Kolkata';
   private readonly timezoneStorageKey = 'cafetron_timezone';
+  private readonly locationStorageKey = 'cafetron_pickup_location';
   private readonly basePickupSlots = [
     '10:00',
     '10:30',
@@ -74,6 +77,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     private orderApi: OrderApiService,
     private cartService: CartService,
     private walletService: WalletService,
+    private timeZoneService: TimeZoneService,
     private router: Router
   ) {}
 
@@ -150,8 +154,14 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     localStorage.setItem(this.timezoneStorageKey, timeZone);
   }
 
+  onLocationChange(location: string): void {
+    this.pickupLocation = location;
+    localStorage.setItem(this.locationStorageKey, location);
+  }
+
   getTimeZoneLabel(timeZone: string): string {
-    return timeZone.replace(/_/g, ' ');
+    const option = this.timeZoneOptions.find((item) => item.id === timeZone);
+    return option ? `${option.label} (${option.offset})` : timeZone.replace(/_/g, ' ');
   }
 
   getPickupSlotLabel(slot: string): string {
@@ -200,6 +210,8 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
     const request: PlaceOrderRequest = {
       pickupSlot: `${this.getPickupSlotLabel(this.selectedPickupSlot)} ${this.getTimeZoneShortName(this.selectedTimeZone)}`,
+      location: this.pickupLocation.trim(),
+      pickupTimeZone: this.selectedTimeZone,
       items: this.cartService.toPlaceOrderItems(),
     };
 
@@ -247,14 +259,44 @@ export class CheckoutComponent implements OnInit, OnDestroy {
   private initializeTimeZone(): void {
     const detectedTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || this.cafeteriaTimeZone;
     const storedTimeZone = localStorage.getItem(this.timezoneStorageKey);
+    const storedLocation = localStorage.getItem(this.locationStorageKey);
     const initialTimeZone = this.isValidTimeZone(storedTimeZone)
       ? storedTimeZone as string
       : detectedTimeZone;
 
-    this.timeZoneOptions = Array.from(
-      new Set([initialTimeZone, detectedTimeZone, ...this.defaultTimeZoneOptions])
-    ).filter((timeZone): timeZone is string => this.isValidTimeZone(timeZone));
+    this.pickupLocation = storedLocation?.trim() || this.pickupLocation;
+    this.timeZoneOptions = this.toTimeZoneOptions([initialTimeZone, detectedTimeZone, ...this.defaultTimeZoneOptions]);
     this.selectedTimeZone = initialTimeZone;
+    this.loadTimeZoneOptions(initialTimeZone, detectedTimeZone);
+  }
+
+  private loadTimeZoneOptions(initialTimeZone: string, detectedTimeZone: string): void {
+    this.timeZoneService
+      .getTimeZones()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (options) => {
+          const apiOptions = options.filter((option) => this.isValidTimeZone(option.id));
+          const localOptions = this.toTimeZoneOptions([initialTimeZone, detectedTimeZone]);
+          const optionMap = new Map<string, TimeZoneOption>();
+
+          [...localOptions, ...apiOptions].forEach((option) => optionMap.set(option.id, option));
+          this.timeZoneOptions = Array.from(optionMap.values());
+        },
+        error: (error) => {
+          console.warn('Failed to load timezone API options; using local fallback.', error);
+        }
+      });
+  }
+
+  private toTimeZoneOptions(timeZones: string[]): TimeZoneOption[] {
+    return Array.from(new Set(timeZones))
+      .filter((timeZone): timeZone is string => this.isValidTimeZone(timeZone))
+      .map((timeZone) => ({
+        id: timeZone,
+        label: timeZone.replace(/_/g, ' '),
+        offset: this.getTimeZoneShortName(timeZone)
+      }));
   }
 
   private isValidTimeZone(timeZone: string | null | undefined): timeZone is string {
