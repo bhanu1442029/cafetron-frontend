@@ -25,7 +25,7 @@
     <ng-container *ngIf="!isLoading && order">
       <section id="order-detail-hero-card" class="hero-card">
         <span id="order-detail-status" [ngClass]="getStatusColor(order.overallStatus)" class="status-badge">{{ order.overallStatus }}</span>
-        <h2 id="order-detail-total">${{ order.totalAmount | number: '1.2-2' }}</h2>
+        <h2 id="order-detail-total">₹{{ order.totalAmount | number: '1.2-2' }}</h2>
         <p id="order-detail-location-slot">{{ order.location || 'Cafeteria counter' }} pickup at {{ order.pickupSlot }}</p>
       </section>
 
@@ -57,12 +57,12 @@
           <article *ngFor="let item of order.items; let i = index" id="order-detail-item-card-{{ i + 1 }}" class="item-card">
             <div>
               <h3 id="order-detail-item-name-{{ i + 1 }}">{{ item.itemName }}</h3>
-              <p id="order-detail-item-quantity-price-{{ i + 1 }}">Qty {{ item.quantity }} x ${{ item.unitPrice | number: '1.2-2' }}</p>
+              <p id="order-detail-item-quantity-price-{{ i + 1 }}">Qty {{ item.quantity }} x ₹{{ item.unitPrice | number: '1.2-2' }}</p>
               <span id="order-detail-item-vendor-status-{{ i + 1 }}" [ngClass]="getVendorStatusColor(item.vendorStatus)" class="vendor-badge">
                 {{ item.vendorStatus }}
               </span>
             </div>
-            <strong id="order-detail-item-total-{{ i + 1 }}">${{ (item.quantity * item.unitPrice) | number: '1.2-2' }}</strong>
+            <strong id="order-detail-item-total-{{ i + 1 }}">₹{{ (item.quantity * item.unitPrice) | number: '1.2-2' }}</strong>
           </article>
         </div>
       </section>

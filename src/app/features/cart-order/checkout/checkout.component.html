@@ -130,7 +130,7 @@
               </div>
               <div id="checkout-card-cart-item-meta-{{ i + 1 }}" class="preview-meta">
                 <span id="checkout-card-cart-item-qty-{{ i + 1 }}">Qty {{ item.quantity }}</span>
-                <strong id="checkout-card-cart-item-total-{{ i + 1 }}">${{ getLineTotal(item) | number: '1.2-2' }}</strong>
+                <strong id="checkout-card-cart-item-total-{{ i + 1 }}">₹{{ getLineTotal(item) | number: '1.2-2' }}</strong>
               </div>
             </article>
           </div>
@@ -172,15 +172,15 @@
           <section class="totals-card embedded-totals">
             <div class="total-row">
               <span>Subtotal</span>
-              <span id="checkout-card-subtotal">${{ totalAmount | number: '1.2-2' }}</span>
+              <span id="checkout-card-subtotal">₹{{ totalAmount | number: '1.2-2' }}</span>
             </div>
             <div class="total-row">
               <span>Tax</span>
-              <span id="checkout-card-tax">$0.00</span>
+              <span id="checkout-card-tax">₹0.00</span>
             </div>
             <div class="total-row grand">
               <span>Total</span>
-              <strong id="checkout-card-total">${{ totalAmount | number: '1.2-2' }}</strong>
+              <strong id="checkout-card-total">₹{{ totalAmount | number: '1.2-2' }}</strong>
             </div>
           </section>
 
@@ -270,7 +270,7 @@
             </div>
             <div id="checkout-overview-cart-item-meta-{{ i + 1 }}" class="preview-meta">
               <span id="checkout-overview-cart-item-qty-{{ i + 1 }}">Qty {{ item.quantity }}</span>
-              <strong id="checkout-overview-cart-item-total-{{ i + 1 }}">${{ getLineTotal(item) | number: '1.2-2' }}</strong>
+              <strong id="checkout-overview-cart-item-total-{{ i + 1 }}">₹{{ getLineTotal(item) | number: '1.2-2' }}</strong>
             </div>
           </article>
         </div>
@@ -308,15 +308,15 @@
         <section class="totals-card embedded-totals">
           <div class="total-row">
             <span>Subtotal</span>
-            <span id="checkout-overview-subtotal">${{ totalAmount | number: '1.2-2' }}</span>
+            <span id="checkout-overview-subtotal">₹{{ totalAmount | number: '1.2-2' }}</span>
           </div>
           <div class="total-row">
             <span>Tax</span>
-            <span id="checkout-overview-tax">$0.00</span>
+            <span id="checkout-overview-tax">₹0.00</span>
           </div>
           <div class="total-row grand">
             <span>Total</span>
-            <strong id="checkout-overview-total">${{ totalAmount | number: '1.2-2' }}</strong>
+            <strong id="checkout-overview-total">₹{{ totalAmount | number: '1.2-2' }}</strong>
           </div>
         </section>
         <button

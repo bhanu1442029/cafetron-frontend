@@ -56,7 +56,7 @@
           </div>
           <div>
             <span>Total</span>
-            <strong id="qr-scanner-preview-total">${{ order.totalAmount | number: '1.2-2' }}</strong>
+            <strong id="qr-scanner-preview-total">₹{{ order.totalAmount | number: '1.2-2' }}</strong>
           </div>
         </div>
 
@@ -73,7 +73,7 @@
             </div>
             <div class="preview-item-meta">
               <span id="qr-scanner-preview-item-qty-{{ i + 1 }}">Qty {{ item.quantity }}</span>
-              <strong id="qr-scanner-preview-item-total-{{ i + 1 }}">${{ getLineTotal(item.unitPrice, item.quantity) | number: '1.2-2' }}</strong>
+              <strong id="qr-scanner-preview-item-total-{{ i + 1 }}">₹{{ getLineTotal(item.unitPrice, item.quantity) | number: '1.2-2' }}</strong>
             </div>
           </article>
         </div>

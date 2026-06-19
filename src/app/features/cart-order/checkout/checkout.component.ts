@@ -109,7 +109,7 @@ export class CheckoutComponent implements OnInit, OnDestroy {
 
     return this.walletBalance === null
       ? 'Unavailable'
-      : `$${this.walletBalance.toFixed(2)}`;
+      : `₹${this.walletBalance.toFixed(2)}`;
   }
 
   getLineTotal(item: CartItem): number {

@@ -153,6 +153,18 @@ select:focus {
   outline: none;
 }
 
+input.invalid,
+select.invalid {
+  border-color: var(--danger);
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.12);
+}
+
+.field-error {
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 800;
+}
+
 button {
   display: flex;
   align-items: center;

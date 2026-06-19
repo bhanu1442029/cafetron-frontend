@@ -18,35 +18,51 @@
       <h2>Create account</h2>
       <p class="subtitle">Set up your profile for menu ordering and pickup.</p>
 
-      <form id="register-form" (ngSubmit)="onSubmit()">
+      <form id="register-form" #registerForm="ngForm" (ngSubmit)="onSubmit(registerForm)" novalidate>
         <div id="register-form-grid" class="form-grid">
           <div class="form-group">
-            <label>Full Name</label>
-            <input id="register-name-input" type="text" [(ngModel)]="formData.name" name="name" placeholder="Your full name" required />
+            <label for="register-name-input">Full Name</label>
+            <input id="register-name-input" type="text" [(ngModel)]="formData.name" name="name" placeholder="Your full name" required [class.invalid]="showFieldError(registerForm, 'name')" />
+            @if (showFieldError(registerForm, 'name')) {
+              <small id="register-name-error" class="field-error">Full name is required.</small>
+            }
           </div>
 
           <div class="form-group">
-            <label>Email</label>
-            <input id="register-email-input" type="email" [(ngModel)]="formData.email" name="email" placeholder="you@cafetron.com" required />
+            <label for="register-email-input">Email</label>
+            <input id="register-email-input" type="email" [(ngModel)]="formData.email" name="email" placeholder="you@cafetron.com" required email [class.invalid]="showFieldError(registerForm, 'email')" />
+            @if (showFieldError(registerForm, 'email')) {
+              <small id="register-email-error" class="field-error">
+                {{ registerForm.controls['email'].errors?.['email'] ? 'Enter a valid email address.' : 'Email is required.' }}
+              </small>
+            }
           </div>
 
           <div class="form-group">
-            <label>Password</label>
-            <input id="register-password-input" type="password" [(ngModel)]="formData.password" name="password" placeholder="Create a password" required />
+            <label for="register-password-input">Password</label>
+            <input id="register-password-input" type="password" [(ngModel)]="formData.password" name="password" placeholder="Create a password" required minlength="8" [class.invalid]="showFieldError(registerForm, 'password')" />
+            @if (showFieldError(registerForm, 'password')) {
+              <small id="register-password-error" class="field-error">
+                {{ registerForm.controls['password'].errors?.['minlength'] ? 'Use at least 8 characters.' : 'Password is required.' }}
+              </small>
+            }
           </div>
 
           <div class="form-group">
-            <label>Employee ID</label>
-            <input id="register-employee-id-input" type="text" [(ngModel)]="formData.employeeId" name="employeeId" placeholder="e.g. EMP001" required />
+            <label for="register-employee-id-input">Employee ID</label>
+            <input id="register-employee-id-input" type="text" [(ngModel)]="formData.employeeId" name="employeeId" placeholder="e.g. EMP001" required [class.invalid]="showFieldError(registerForm, 'employeeId')" />
+            @if (showFieldError(registerForm, 'employeeId')) {
+              <small id="register-employee-id-error" class="field-error">Employee ID is required.</small>
+            }
           </div>
 
           <div class="form-group">
-            <label>Department</label>
+            <label for="register-department-input">Department</label>
             <input id="register-department-input" type="text" [(ngModel)]="formData.department" name="department" placeholder="e.g. Engineering" />
           </div>
 
           <div class="form-group">
-            <label>Role</label>
+            <label for="register-role-select">Role</label>
             <select id="register-role-select" [(ngModel)]="formData.role" name="role">
               <option id="register-role-employee-option" value="EMPLOYEE">Employee</option>
               <option id="register-role-vendor-option" value="VENDOR">Vendor</option>
