@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -9,7 +9,14 @@ import { OrderApiService } from '../services/order-api.service';
 import { PlaceOrderRequest } from '../models/order.models';
 import { CartItem, CartService } from '../services/cart.service';
 import { WalletService } from '../../wallet/wallet.service';
-import { TimeZoneOption, TimeZoneService } from '../services/timezone.service';
+
+type PickupWindow = {
+  id: string;
+  label: string;
+  start: string;
+  end: string;
+  caption: string;
+};
 
 @Component({
   selector: 'checkout',
@@ -20,84 +27,52 @@ import { TimeZoneOption, TimeZoneService } from '../services/timezone.service';
 })
 export class CheckoutComponent implements OnInit, OnDestroy {
   cartItems: CartItem[] = [];
-  selectedPickupSlot: string = '';
-  selectedPickupSlotEpochMillis: number | null = null;
-  selectedTimeZone = 'Asia/Kolkata';
+  selectedPickupSlot = '';
   pickupLocation = 'Cafetron cafeteria counter';
-  timeZoneOptions: TimeZoneOption[] = [];
-  totalAmount: number = 0;
+  totalAmount = 0;
   walletBalance: number | null = null;
-  isLoading: boolean = false;
-  isWalletLoading: boolean = false;
-  errorMessage: string = '';
-  toastMessage: string = '';
+  isLoading = false;
+  isWalletLoading = false;
+  errorMessage = '';
+  toastMessage = '';
   toastType: 'error' | 'success' = 'error';
   checkoutView: 'cards' | 'overview' = 'cards';
   activeStep = 0;
-  private destroy$ = new Subject<void>();
-  private toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
-  private slotAvailabilityTimerId: ReturnType<typeof setInterval> | null = null;
-  private readonly cafeteriaTimeZone = 'Asia/Kolkata';
-  private readonly minPickupLeadMinutes = 30;
-  private readonly timezoneStorageKey = 'cafetron_timezone';
-  private readonly locationStorageKey = 'cafetron_pickup_location';
-  private readonly basePickupSlots = [
-    '10:00',
-    '10:30',
-    '11:00',
-    '11:30',
-    '12:00',
-    '12:30',
-    '13:00',
-    '13:30',
-    '14:00',
-  ];
 
-  private readonly defaultTimeZoneOptions = [
-    'Asia/Kolkata',
-    'UTC',
-    'Asia/Dubai',
-    'Asia/Singapore',
-    'Europe/London',
-    'Europe/Berlin',
-    'America/New_York',
-    'America/Chicago',
-    'America/Denver',
-    'America/Los_Angeles',
-    'Australia/Sydney',
+  readonly pickupSlots: PickupWindow[] = [
+    { id: 'morning', label: 'Morning', start: '08:30', end: '09:00', caption: '8:30 AM - 9:00 AM' },
+    { id: 'afternoon', label: 'Afternoon', start: '12:00', end: '14:00', caption: '12:00 PM - 2:00 PM' },
+    { id: 'evening', label: 'Evening', start: '16:00', end: '18:00', caption: '4:00 PM - 6:00 PM' },
+    { id: 'dinner', label: 'Dinner', start: '20:00', end: '22:00', caption: '8:00 PM - 10:00 PM' },
   ];
 
   checkoutSteps = [
-    { label: 'Time slot', icon: 'schedule' },
+    { label: 'Pickup window', icon: 'schedule' },
     { label: 'Preview food', icon: 'restaurant' },
     { label: 'Payment', icon: 'payments' },
     { label: 'Place order', icon: 'receipt_long' },
   ];
 
-  pickupSlots = this.basePickupSlots;
+  private destroy$ = new Subject<void>();
+  private toastTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private slotAvailabilityTimerId: ReturnType<typeof setInterval> | null = null;
+  private readonly locationStorageKey = 'cafetron_pickup_location';
 
   constructor(
     private orderApi: OrderApiService,
     private cartService: CartService,
     private walletService: WalletService,
-    private timeZoneService: TimeZoneService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
     const token = localStorage.getItem('jwt_token');
     if (!token) {
-      console.warn('No JWT found — redirecting to login');
       this.router.navigate(['/login']);
       return;
     }
 
-    if (!this.hasStoredTimeZonePreference()) {
-      this.router.navigate(['/timezone'], { queryParams: { returnUrl: '/checkout' } });
-      return;
-    }
-
-    this.initializeTimeZone();
+    this.pickupLocation = localStorage.getItem(this.locationStorageKey)?.trim() || this.pickupLocation;
 
     this.cartService.cartItems$
       .pipe(takeUntil(this.destroy$))
@@ -110,36 +85,9 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.slotAvailabilityTimerId = setInterval(() => {
       if (this.selectedPickupSlot && !this.hasValidPickupSlotSelected()) {
         this.selectedPickupSlot = '';
-        this.selectedPickupSlotEpochMillis = null;
-        this.showToast(`Selected pickup time expired. Choose a slot at least ${this.minPickupLeadMinutes} minutes from now.`, 'error');
+        this.showToast('Selected pickup window has ended. Please choose another available window.', 'error');
       }
     }, 30000);
-  }
-
-  private calculateTotal(): void {
-    this.totalAmount = this.cartItems.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-  }
-
-  private loadWalletBalance(): void {
-    this.isWalletLoading = true;
-
-    this.walletService
-      .getWallet()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (wallet) => {
-          this.walletBalance = wallet.balance;
-          this.isWalletLoading = false;
-        },
-        error: (error) => {
-          console.error('Failed to load wallet:', error);
-          this.walletBalance = null;
-          this.isWalletLoading = false;
-        },
-      });
   }
 
   getWalletLabel(): string {
@@ -168,44 +116,30 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     this.checkoutView = view;
   }
 
-  onTimeZoneChange(timeZone: string): void {
-    this.selectedTimeZone = timeZone;
-    localStorage.setItem(this.timezoneStorageKey, timeZone);
-  }
-
   onLocationChange(location: string): void {
     this.pickupLocation = location;
     localStorage.setItem(this.locationStorageKey, location);
   }
 
-  getTimeZoneLabel(timeZone: string): string {
-    const option = this.timeZoneOptions.find((item) => item.id === timeZone);
-    return option ? `${option.label} (${option.offset})` : timeZone.replace(/_/g, ' ');
+  getPickupSlotLabel(slot: PickupWindow): string {
+    return slot.label;
   }
 
-  getPickupSlotLabel(slot: string): string {
-    return this.formatPickupSlot(slot, this.selectedTimeZone);
+  getPickupSlotCaption(slot: PickupWindow): string {
+    return slot.caption;
   }
 
-  getPickupSlotCaption(slot: string): string {
-    const dateLabel = this.getPickupSlotDateLabel(slot);
-    return slot === this.getFirstAvailablePickupSlot()
-      ? `Fastest ${dateLabel}`
-      : `${dateLabel} ${this.getTimeZoneShortName(this.selectedTimeZone)}`;
-  }
-
-  selectPickupSlot(slot: string): void {
+  selectPickupSlot(slot: PickupWindow): void {
     if (!this.isPickupSlotAvailable(slot)) {
       this.showToast(this.getInvalidPickupSlotMessage(slot), 'error');
       return;
     }
 
-    this.selectedPickupSlot = slot;
-    this.selectedPickupSlotEpochMillis = this.getPickupSlotDate(slot).getTime();
+    this.selectedPickupSlot = slot.id;
     this.errorMessage = '';
   }
 
-  onPickupSlotPointerDown(slot: string, event: PointerEvent): void {
+  onPickupSlotPointerDown(slot: PickupWindow, event: PointerEvent): void {
     if (this.isPickupSlotAvailable(slot)) {
       return;
     }
@@ -219,8 +153,13 @@ export class CheckoutComponent implements OnInit, OnDestroy {
     return this.pickupSlots.some((slot) => this.isPickupSlotAvailable(slot));
   }
 
-  isPickupSlotAvailable(slot: string): boolean {
-    return this.getPickupSlotDate(slot).getTime() >= Date.now() + this.minPickupLeadMinutes * 60 * 1000;
+  isPickupSlotAvailable(slotOrId: PickupWindow | string): boolean {
+    const slot = this.resolvePickupSlot(slotOrId);
+    if (!slot) {
+      return false;
+    }
+
+    return this.getMinutesSinceMidnight() <= this.getSlotEndMinutes(slot);
   }
 
   goToStep(index: number): void {
@@ -261,15 +200,20 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       return;
     }
 
+    const selectedSlot = this.resolvePickupSlot(this.selectedPickupSlot);
+    if (!selectedSlot) {
+      this.showToast(this.getPickupSlotRequiredMessage(), 'error');
+      return;
+    }
+
     this.isLoading = true;
     this.errorMessage = '';
 
     const request: PlaceOrderRequest = {
-      pickupSlot: `${this.getPickupSlotLabel(this.selectedPickupSlot)} ${this.getTimeZoneShortName(this.selectedTimeZone)}`,
-      pickupSlotTime: this.selectedPickupSlot,
-      pickupSlotEpochMillis: this.getSelectedPickupSlotEpochMillis(),
+      pickupSlot: `${selectedSlot.label} (${selectedSlot.caption})`,
+      pickupSlotTime: selectedSlot.start,
       location: this.pickupLocation.trim(),
-      pickupTimeZone: this.selectedTimeZone,
+      pickupTimeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata',
       items: this.cartService.toPlaceOrderItems(),
     };
 
@@ -278,16 +222,10 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          console.log('✅ Order placed:', response);
           this.cartService.clearCart();
           this.router.navigate(['/orders', response.orderId]);
         },
         error: (error) => {
-          console.error('❌ Full Error Response:', error);
-          console.error('   Status:', error.status);
-          console.error('   Message:', error.error?.message);
-          console.error('   Error:', error.error);
-
           const apiMessage = error.error?.message || error.error?.error;
           const statusMessage = error.status === 401
             ? 'Your session is not valid. Please log in again before placing the order.'
@@ -298,6 +236,67 @@ export class CheckoutComponent implements OnInit, OnDestroy {
           this.isLoading = false;
         },
       });
+  }
+
+  private calculateTotal(): void {
+    this.totalAmount = this.cartItems.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+  }
+
+  private loadWalletBalance(): void {
+    this.isWalletLoading = true;
+
+    this.walletService
+      .getWallet()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (wallet) => {
+          this.walletBalance = wallet.balance;
+          this.isWalletLoading = false;
+        },
+        error: (error) => {
+          console.error('Failed to load wallet:', error);
+          this.walletBalance = null;
+          this.isWalletLoading = false;
+        },
+      });
+  }
+
+  private hasValidPickupSlotSelected(): boolean {
+    return !!this.selectedPickupSlot && this.isPickupSlotAvailable(this.selectedPickupSlot);
+  }
+
+  private getPickupSlotRequiredMessage(): string {
+    if (!this.selectedPickupSlot) {
+      return 'Please select an available pickup window';
+    }
+
+    const slot = this.resolvePickupSlot(this.selectedPickupSlot);
+    return slot ? this.getInvalidPickupSlotMessage(slot) : 'Please select an available pickup window';
+  }
+
+  private getInvalidPickupSlotMessage(slot: PickupWindow): string {
+    return `${slot.label} pickup is closed for today. Please choose a later available window.`;
+  }
+
+  private resolvePickupSlot(slotOrId: PickupWindow | string): PickupWindow | null {
+    if (typeof slotOrId !== 'string') {
+      return slotOrId;
+    }
+
+    return this.pickupSlots.find((slot) => slot.id === slotOrId) || null;
+  }
+
+  private getSlotEndMinutes(slot: PickupWindow): number {
+    const [hour, minute] = slot.end.split(':').map(Number);
+    return hour * 60 + minute;
+  }
+
+  private getMinutesSinceMidnight(): number {
+    const now = new Date();
+    return now.getHours() * 60 + now.getMinutes();
   }
 
   private showToast(message: string, type: 'error' | 'success'): void {
@@ -313,229 +312,6 @@ export class CheckoutComponent implements OnInit, OnDestroy {
       this.toastMessage = '';
       this.toastTimeoutId = null;
     }, 4200);
-  }
-
-  private initializeTimeZone(): void {
-    const detectedTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || this.cafeteriaTimeZone;
-    const storedTimeZone = localStorage.getItem(this.timezoneStorageKey);
-    const storedLocation = localStorage.getItem(this.locationStorageKey);
-    const initialTimeZone = this.isValidTimeZone(storedTimeZone)
-      ? storedTimeZone as string
-      : detectedTimeZone;
-
-    this.pickupLocation = storedLocation?.trim() || this.pickupLocation;
-    this.timeZoneOptions = this.toTimeZoneOptions([initialTimeZone, detectedTimeZone, ...this.defaultTimeZoneOptions]);
-    this.selectedTimeZone = initialTimeZone;
-    this.loadTimeZoneOptions(initialTimeZone, detectedTimeZone);
-  }
-
-  private hasStoredTimeZonePreference(): boolean {
-    return this.isValidTimeZone(localStorage.getItem(this.timezoneStorageKey));
-  }
-
-  private loadTimeZoneOptions(initialTimeZone: string, detectedTimeZone: string): void {
-    this.timeZoneService
-      .getTimeZones()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (options) => {
-          const apiOptions = options.filter((option) => this.isValidTimeZone(option.id));
-          const localOptions = this.toTimeZoneOptions([initialTimeZone, detectedTimeZone]);
-          const optionMap = new Map<string, TimeZoneOption>();
-
-          [...localOptions, ...apiOptions].forEach((option) => optionMap.set(option.id, option));
-          this.timeZoneOptions = Array.from(optionMap.values());
-        },
-        error: (error) => {
-          console.warn('Failed to load timezone API options; using local fallback.', error);
-        }
-      });
-  }
-
-  private toTimeZoneOptions(timeZones: string[]): TimeZoneOption[] {
-    return Array.from(new Set(timeZones))
-      .filter((timeZone): timeZone is string => this.isValidTimeZone(timeZone))
-      .map((timeZone) => ({
-        id: timeZone,
-        label: timeZone.replace(/_/g, ' '),
-        offset: this.getTimeZoneShortName(timeZone)
-      }));
-  }
-
-  private isValidTimeZone(timeZone: string | null | undefined): timeZone is string {
-    if (!timeZone) {
-      return false;
-    }
-
-    try {
-      Intl.DateTimeFormat('en-US', { timeZone }).format(new Date());
-      return true;
-    } catch {
-      return false;
-    }
-  }
-
-  private formatPickupSlot(slot: string, timeZone: string): string {
-    const slotDate = this.getPickupSlotDate(slot);
-
-    return new Intl.DateTimeFormat('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-      timeZone,
-    }).format(slotDate);
-  }
-
-  private hasValidPickupSlotSelected(): boolean {
-    return !!this.selectedPickupSlot
-      && this.getSelectedPickupSlotEpochMillis() >= Date.now() + this.minPickupLeadMinutes * 60 * 1000;
-  }
-
-  private getPickupSlotRequiredMessage(): string {
-    if (!this.selectedPickupSlot) {
-      return `Please select a pickup time at least ${this.minPickupLeadMinutes} minutes from now`;
-    }
-
-    return this.getInvalidPickupSlotMessage(this.selectedPickupSlot);
-  }
-
-  private getInvalidPickupSlotMessage(slot: string): string {
-    if (this.isPickupSlotPast(slot)) {
-      return 'That pickup time has already passed. Please choose a later slot.';
-    }
-
-    return `Pickup time must be at least ${this.minPickupLeadMinutes} minutes from now`;
-  }
-
-  private getFirstAvailablePickupSlot(): string {
-    return this.pickupSlots.find((slot) => this.isPickupSlotAvailable(slot)) || '';
-  }
-
-  private isPickupSlotPast(slot: string): boolean {
-    return this.getPickupSlotDate(slot).getTime() < Date.now();
-  }
-
-  private getPickupSlotDate(slot: string): Date {
-    const [hour, minute] = slot.split(':').map(Number);
-    const cafeteriaDate = this.getTodayInTimeZone(this.cafeteriaTimeZone);
-
-    const slotDate = this.getDateForZonedTime(
-      this.cafeteriaTimeZone,
-      cafeteriaDate.year,
-      cafeteriaDate.month,
-      cafeteriaDate.day,
-      hour,
-      minute
-    );
-
-    if (slotDate.getTime() >= Date.now() + this.minPickupLeadMinutes * 60 * 1000) {
-      return slotDate;
-    }
-
-    return new Date(slotDate.getTime() + 24 * 60 * 60 * 1000);
-  }
-
-  private getSelectedPickupSlotEpochMillis(): number {
-    if (this.selectedPickupSlotEpochMillis !== null) {
-      return this.selectedPickupSlotEpochMillis;
-    }
-
-    return this.selectedPickupSlot ? this.getPickupSlotDate(this.selectedPickupSlot).getTime() : 0;
-  }
-
-  private getPickupSlotDateLabel(slot: string): string {
-    const slotDate = this.getPickupSlotDate(slot);
-    const today = this.getDateKey(new Date(), this.selectedTimeZone);
-    const tomorrow = this.getDateKey(new Date(Date.now() + 24 * 60 * 60 * 1000), this.selectedTimeZone);
-    const slotDay = this.getDateKey(slotDate, this.selectedTimeZone);
-
-    if (slotDay === today) {
-      return 'Today';
-    }
-
-    if (slotDay === tomorrow) {
-      return 'Tomorrow';
-    }
-
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      timeZone: this.selectedTimeZone,
-    }).format(slotDate);
-  }
-
-  private getDateKey(date: Date, timeZone: string): string {
-    return new Intl.DateTimeFormat('en-CA', {
-      timeZone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).format(date);
-  }
-
-  private getTimeZoneShortName(timeZone: string): string {
-    const formattedParts = new Intl.DateTimeFormat('en-US', {
-      timeZone,
-      timeZoneName: 'short',
-    }).formatToParts(new Date());
-
-    return formattedParts.find((part) => part.type === 'timeZoneName')?.value || timeZone;
-  }
-
-  private getTodayInTimeZone(timeZone: string): { year: number; month: number; day: number } {
-    const parts = new Intl.DateTimeFormat('en-US', {
-      timeZone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    }).formatToParts(new Date());
-
-    return {
-      year: Number(parts.find((part) => part.type === 'year')?.value),
-      month: Number(parts.find((part) => part.type === 'month')?.value),
-      day: Number(parts.find((part) => part.type === 'day')?.value),
-    };
-  }
-
-  private getDateForZonedTime(
-    timeZone: string,
-    year: number,
-    month: number,
-    day: number,
-    hour: number,
-    minute: number
-  ): Date {
-    const utcGuess = Date.UTC(year, month - 1, day, hour, minute);
-    const firstOffset = this.getTimeZoneOffsetMs(new Date(utcGuess), timeZone);
-    const firstDate = new Date(utcGuess - firstOffset);
-    const secondOffset = this.getTimeZoneOffsetMs(firstDate, timeZone);
-
-    return new Date(utcGuess - secondOffset);
-  }
-
-  private getTimeZoneOffsetMs(date: Date, timeZone: string): number {
-    const parts = new Intl.DateTimeFormat('en-US', {
-      timeZone,
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hourCycle: 'h23',
-    }).formatToParts(date);
-
-    const value = (type: string): number => Number(parts.find((part) => part.type === type)?.value);
-    const asUtc = Date.UTC(
-      value('year'),
-      value('month') - 1,
-      value('day'),
-      value('hour'),
-      value('minute'),
-      value('second')
-    );
-
-    return asUtc - date.getTime();
   }
 
   ngOnDestroy(): void {

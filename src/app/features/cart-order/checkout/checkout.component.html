@@ -85,13 +85,13 @@
             <span class="material-symbols-outlined">schedule</span>
             <div>
               <p class="eyebrow">Step 1</p>
-              <h3>Select time slot</h3>
+              <h3>Select pickup window</h3>
             </div>
           </div>
-          <p class="card-copy">Choose when your food should be fresh and ready for pickup.</p>
+          <p class="card-copy">Choose the pickup window when you will collect your food.</p>
 
           <div class="pickup-context-grid">
-            <div class="timezone-control">
+            <div class="location-control">
               <label for="checkout-card-location-input">Location</label>
               <input
                 id="checkout-card-location-input"
@@ -101,18 +101,6 @@
                 placeholder="Pickup location"
               />
             </div>
-            <div class="timezone-control">
-              <label for="checkout-card-timezone-select">Timezone</label>
-              <select
-                id="checkout-card-timezone-select"
-                [(ngModel)]="selectedTimeZone"
-                (ngModelChange)="onTimeZoneChange($event)"
-              >
-                <option *ngFor="let timeZone of timeZoneOptions" [value]="timeZone.id">
-                  {{ getTimeZoneLabel(timeZone.id) }}
-                </option>
-              </select>
-            </div>
           </div>
 
           <div class="slot-grid">
@@ -120,7 +108,7 @@
               *ngFor="let slot of pickupSlots; let i = index"
               id="checkout-card-pickup-slot-{{ i + 1 }}"
               class="time-slot"
-              [class.selected]="selectedPickupSlot === slot"
+              [class.selected]="selectedPickupSlot === slot.id"
               [class.unavailable]="!isPickupSlotAvailable(slot)"
               [attr.aria-disabled]="!isPickupSlotAvailable(slot)"
               (pointerdown)="onPickupSlotPointerDown(slot, $event)"
@@ -132,7 +120,7 @@
             </button>
           </div>
           <p *ngIf="!hasAvailablePickupSlots()" id="checkout-card-no-slots-message" class="slot-help">
-            No pickup slots are available at least 30 minutes from now.
+            No pickup windows are available for today.
           </p>
         </ng-container>
 
@@ -260,11 +248,11 @@
           <span class="material-symbols-outlined">schedule</span>
           <div>
             <p class="eyebrow">Step 1</p>
-            <h3>Select time slot</h3>
+            <h3>Select pickup window</h3>
           </div>
         </div>
         <div class="pickup-context-grid compact">
-          <div class="timezone-control">
+          <div class="location-control">
             <label for="checkout-overview-location-input">Location</label>
             <input
               id="checkout-overview-location-input"
@@ -274,25 +262,13 @@
               placeholder="Pickup location"
             />
           </div>
-          <div class="timezone-control">
-            <label for="checkout-overview-timezone-select">Timezone</label>
-            <select
-              id="checkout-overview-timezone-select"
-              [(ngModel)]="selectedTimeZone"
-              (ngModelChange)="onTimeZoneChange($event)"
-            >
-              <option *ngFor="let timeZone of timeZoneOptions" [value]="timeZone.id">
-                {{ getTimeZoneLabel(timeZone.id) }}
-              </option>
-            </select>
-          </div>
         </div>
         <div class="slot-grid compact">
           <button
             *ngFor="let slot of pickupSlots; let i = index"
             id="checkout-overview-pickup-slot-{{ i + 1 }}"
             class="time-slot"
-            [class.selected]="selectedPickupSlot === slot"
+            [class.selected]="selectedPickupSlot === slot.id"
             [class.unavailable]="!isPickupSlotAvailable(slot)"
             [attr.aria-disabled]="!isPickupSlotAvailable(slot)"
             (pointerdown)="onPickupSlotPointerDown(slot, $event)"
@@ -304,7 +280,7 @@
           </button>
         </div>
         <p *ngIf="!hasAvailablePickupSlots()" id="checkout-overview-no-slots-message" class="slot-help">
-          No pickup slots are available at least 30 minutes from now.
+          No pickup windows are available for today.
         </p>
       </article>
 

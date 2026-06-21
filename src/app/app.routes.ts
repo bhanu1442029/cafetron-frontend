@@ -137,15 +137,6 @@ export const routes: Routes = [
       import('./features/auth/register/register')
         .then(m => m.RegisterComponent),
   },
-  {
-    path: 'timezone',
-    title: 'Select Timezone',
-    canActivate: [authGuard],
-    loadComponent: () =>
-      import('./features/auth/timezone-setup/timezone-setup.component')
-        .then(m => m.TimezoneSetupComponent),
-  },
-
   // ── TEAMMATES' ROUTES (unchanged, just added authGuard) ─────────
   {
     path: 'menu',
